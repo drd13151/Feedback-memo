@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>피드백 메모 v0.4</title>
+<title>피드백 메모 v0.5</title>
 <style>
 :root{--bg:#f3f0e9;--card:#fff;--ink:#1d2127;--dim:#6b7078;--line:#e2ddd2;--acc:#e8772e;--accd:#c85f1a;--ok:#1f9d55;--bad:#d64545;--k:#e8772e}
 *{box-sizing:border-box}
@@ -51,9 +51,12 @@ video{display:block;width:100%;max-height:58vh;background:#000;border-radius:10p
 #ytwrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .ytrow{display:flex;gap:6px;margin-top:12px}
 .ytrow input{flex:1;min-width:0}
-#mk summary{font-weight:700;color:var(--ink)}
-#mk .g{display:grid;grid-template-columns:2fr 1.2fr .8fr;gap:8px;margin:8px 0}
-@media(max-width:560px){#mk .g{grid-template-columns:1fr}}
+#sentBar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#e9f7ef;border:1px solid #b9e3c9;border-radius:10px;padding:8px 12px;margin:0 auto 8px;max-width:760px;font-size:14px}
+#sentBar span{flex:1;min-width:0}
+#sentBar button{flex:none;padding:6px 10px}
+body.sentOn #toast{bottom:calc(140px + env(safe-area-inset-bottom))}
+#dock button.sub{flex:none;background:none;border:none;color:var(--dim);text-decoration:underline;padding:12px 6px;font-size:14px}
+.note{color:var(--dim);font-size:13px;margin:-4px 0 12px}
 .vbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 2px}
 .vbar .clock{font:700 20px Consolas,"SF Mono",monospace}
 .vbar .clock span{color:var(--dim);font-weight:400;font-size:15px}
@@ -140,9 +143,10 @@ pre{white-space:pre-wrap;word-break:break-word;background:#fbfaf7;border:1px sol
 <body>
 <div class="wrap">
 <header>
- <h1>피드백 메모<small>v0.4</small></h1>
- <p class="safe">적은 내용은 <b>이 기기에만</b> 저장되고 어디로도 보내지 않아요. 영상 파일도 올라가지 않아요. 창을 닫았다 열어도 적은 내용은 남아 있어요.</p>
- <ol class="how"><li><b>①</b> 받은 영상 열기</li><li><b>②</b> 보다가 고칠 곳에서 종류 누르기 → IN 시간이 저절로 들어가요 (구간이면 끝에서 [OUT 찍기])</li><li><b>③</b> 내용 적고 [목록에 추가]</li><li><b>④</b> [글자로 복사] → 카톡에 붙여넣기</li></ol>
+ <h1>피드백 메모<small>v0.5</small></h1>
+ <p class="safe">적은 내용은 <b>이 기기에만</b> 저장되고 어디로도 보내지 않아요. 영상 파일을 열면 올라가지 않고 이 기기에서만 재생돼요. 유튜브 링크는 유튜브에서 재생돼요.</p>
+ <ol class="how"><li><b>①</b> 받은 영상 열기</li><li><b>②</b> 보다가 고칠 곳에서 종류 누르기 → IN 시간이 저절로 들어가요 (구간이면 끝에서 [OUT 찍기])</li><li><b>③</b> 내용 적고 [목록에 추가]</li><li><b>④</b> [파일로 보내기] → 카톡 등으로 편집자에게</li></ol>
+ <p class="note">공용 컴퓨터에서 썼다면 보낸 뒤 <b>[보낸 내용 지우기]</b>를 눌러 주세요. 며칠에 걸쳐 나눠 쓰면(특히 아이폰) 저장된 내용이 지워질 수 있어요. 다 쓰면 바로 보내 주세요.</p>
 </header>
 <div id="storeWarn" class="warn" hidden>이 브라우저에서는 자동 저장이 안 돼요. 다 적은 뒤 창을 닫기 전에 꼭 보내 주세요.</div>
 
@@ -175,12 +179,6 @@ pre{white-space:pre-wrap;word-break:break-word;background:#fbfaf7;border:1px sol
   </div>
  </section>
 
- <details class="card" id="mk"><summary>편집자용 · 고객에게 보낼 링크 만들기</summary>
-  <div class="hint">유튜브에 <b>일부 공개</b>로 올린 영상 주소를 넣으면, 고객이 누르자마자 그 영상이 열리는 링크가 만들어져요. 영상마다 적은 내용이 따로 저장돼요.</div>
-  <div class="g"><input id="mkUrl" placeholder="유튜브 주소" autocomplete="off" inputmode="url"><input id="mkProject" placeholder="영상 이름 (예: 브이로그 3화)" autocomplete="off"><input id="mkRound" placeholder="차수 (예: 1)" inputmode="numeric" autocomplete="off"></div>
-  <button type="button" class="small" id="bMk">링크 만들고 복사</button>
-  <input id="mkOut" readonly hidden style="margin-top:8px;font-size:13px">
- </details>
 </div>
 
 <div class="right">
@@ -241,24 +239,25 @@ pre{white-space:pre-wrap;word-break:break-word;background:#fbfaf7;border:1px sol
   <h2><span class="n">3</span>적은 피드백 <span id="countH" style="color:var(--dim);font-weight:400"></span></h2>
   <ol id="list"></ol>
   <details id="pv"><summary>보낼 내용 미리보기</summary><pre id="preview"></pre></details>
-  <div class="foot"><span class="hint" id="fname"></span><button type="button" class="link" id="bReset">모두 지우고 새로 시작</button></div>
+  <div class="foot"><span class="hint" id="fname"></span><button type="button" class="link" id="bWipe">보낸 내용 지우기</button></div>
  </section>
 </div>
 </div>
-<p class="credit">피드백 메모 v0.4 · 결과는 edit-feedback/1 형식(표)으로 나가서 편집자의 「피드백 점프」·「피드백 검수 목록」에 그대로 들어갑니다</p>
+<p class="credit">피드백 메모 v0.5</p>
 </div>
 
-<div id="dock"><div class="in">
+<div id="dock">
+ <div id="sentBar" hidden><span>보냈나요? 공용 컴퓨터라면 지워 주세요</span><button type="button" class="small" id="bWipe2">지우기</button><button type="button" class="small link" id="bSentX">닫기</button></div>
+ <div class="in">
  <span class="cnt"><b id="cnt">0</b>건</span>
- <button type="button" class="primary" id="bCopy">글자로 복사</button>
- <button type="button" id="bSave">파일 저장</button>
- <button type="button" id="bShare" hidden>공유</button>
+ <button type="button" class="primary" id="bSend">파일로 보내기</button>
+ <button type="button" class="sub" id="bCopy">글로 복사</button>
 </div></div>
 <div id="toast" role="status"></div>
 
 <script>
 /*PURE-START*/
-// Kind names must match Edit_Feedback_Spec_v1 exactly; the editor's tools read the 유형 column by these words.
+// Kind names must not change: the saved file is read back by these exact words.
 const KINDS=[
  {id:'글자',color:'#2f7fd8',desc:'자막·오타·이름표가 틀렸어요',time:'req',memo:'덧붙일 말',memoNeed:false},
  {id:'오디오',color:'#1f9d55',desc:'소리가 크거나 작거나 이상해요',time:'req',memo:'설명',memoNeed:false},
@@ -321,7 +320,7 @@ function buildMd(meta,items,video,now){
   return out.join('\n');});
  const who=cell(meta.from)||'보낸 사람';
  const seen=video&&video.name?' · 본 영상 '+cell(video.name)+(video.length?' ('+video.length+')':''):'';
- return fm.join('\n')+'\n\n'+head.concat(rows).join('\n')+'\n\n## 받은 원문\n\n('+who+'이(가) 피드백 메모 v0.4에 직접 적은 내용 · '+today(now)+' '+p2(now.getHours())+':'+p2(now.getMinutes())+seen+')\n\n'+raw.join('\n')+'\n';
+ return fm.join('\n')+'\n\n'+head.concat(rows).join('\n')+'\n\n## 받은 원문\n\n('+who+'이(가) 피드백 메모 v0.5에 직접 적은 내용 · '+today(now)+' '+p2(now.getHours())+':'+p2(now.getMinutes())+seen+')\n\n'+raw.join('\n')+'\n';
 }
 /*PURE-END*/
 
@@ -512,14 +511,20 @@ async function copyText(text){
  try{await navigator.clipboard.writeText(text);return true;}catch{}
  const a=document.createElement('textarea');a.value=text;a.setAttribute('readonly','');a.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.appendChild(a);a.select();a.setSelectionRange(0,text.length);let ok=false;try{ok=document.execCommand('copy');}catch{}a.remove();return ok;
 }
+// One way out: a .md file. Phones hand it to the share sheet (KakaoTalk etc.), computers download it.
+// Copying as text stays as a small fallback for places where files are awkward.
+const phone=()=>matchMedia('(pointer:coarse)').matches;
+function canShareFile(f){try{return !!(navigator.canShare&&navigator.canShare({files:[f]}));}catch{return false;}}
+function sent(msg){$('sentBar').hidden=false;document.body.classList.add('sentOn');toast(msg);}
+$('bSend').onclick=async()=>{if(!ready())return;const name=fileName(S.meta),text=md();
+ const f=new File([text],name,{type:'text/plain'});
+ if(phone()&&canShareFile(f)){try{await navigator.share({files:[f],title:name});sent('보냈어요');return;}catch(e){if(e&&e.name==='AbortError')return;}}
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/markdown;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+ sent(name+' 저장했어요. 이 파일을 편집자에게 보내 주세요');};
 $('bCopy').onclick=async()=>{if(!ready())return;const t=md();
- if(await copyText(t))toast('복사했어요. 카톡 대화창에 붙여넣어 보내 주세요');
+ if(await copyText(t))sent('복사했어요. 카톡 대화창에 붙여넣어 보내 주세요');
  else{$('pv').open=true;$('preview').textContent=t;toast('자동 복사가 안 돼요. 아래 미리보기 글을 길게 눌러 복사해 주세요');}};
-$('bSave').onclick=()=>{if(!ready())return;const name=fileName(S.meta);
- const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([md()],{type:'text/markdown;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
- toast(name+' 저장했어요. 이 파일을 편집자에게 보내 주세요');};
-try{if(navigator.canShare&&navigator.canShare({files:[new File(['x'],'x.md',{type:'text/plain'})]}))$('bShare').hidden=false;}catch{}
-$('bShare').onclick=async()=>{if(!ready())return;try{await navigator.share({files:[new File([md()],fileName(S.meta),{type:'text/plain'})],title:fileName(S.meta)});}catch(e){if(e&&e.name==='AbortError')return;try{await navigator.share({text:md()});}catch{toast('공유가 안 돼요. 「글자로 복사」를 써 주세요');}}};
+$('bSentX').onclick=()=>{$('sentBar').hidden=true;document.body.classList.remove('sentOn');};
 
 /* ---------- events ---------- */
 $('bPick').onclick=e=>{e.stopPropagation();$('file').click();};
@@ -527,10 +532,6 @@ $('bRepick').onclick=()=>{closeVideo();S.video=null;save();applyKind();renderLis
 $('drop').onclick=e=>{if(e.target.closest('#ytRow'))return;$('file').click();};
 $('bYt').onclick=()=>openYt(ytIdOf($('ytUrl').value));
 $('ytUrl').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();openYt(ytIdOf($('ytUrl').value));}});
-$('bMk').onclick=async()=>{const id=ytIdOf($('mkUrl').value);if(!id){toast('유튜브 주소를 알아볼 수 없어요');return;}
- if(location.protocol==='file:'){toast('이 도구를 웹 주소로 열었을 때만 링크를 만들 수 있어요');return;}
- const pj=$('mkProject').value.trim(),rd=$('mkRound').value.trim(),link=location.origin+location.pathname+'?yt='+id+(pj?'&project='+encodeURIComponent(pj):'')+(rd?'&round='+encodeURIComponent(rd):'');
- $('mkOut').hidden=false;$('mkOut').value=link;toast(await copyText(link)?'링크를 복사했어요. 고객에게 보내 주세요':'아래 칸의 링크를 복사해 보내 주세요');};
 $('file').onchange=e=>{openVideo(e.target.files[0]);e.target.value='';};
 $('drop').addEventListener('dragover',e=>{e.preventDefault();$('drop').classList.add('drag');});
 $('drop').addEventListener('dragleave',()=>$('drop').classList.remove('drag'));
@@ -568,15 +569,21 @@ $('list').onclick=e=>{const ed=e.target.dataset.edit,dl=e.target.dataset.del,sel
  if(sel)selectItem(+sel.dataset.sel);};
 $('pv').addEventListener('toggle',renderList);
 for(const [id,key] of [['mProject','project'],['mRound','round'],['mFrom','from']])$(id).addEventListener('input',()=>{S.meta[key]=$(id).value;save();renderList();});
-let resetArm=0;
-$('bReset').onclick=()=>{if(!S.items.length&&!hasDraft())return;if(Date.now()-resetArm>3000){resetArm=Date.now();$('bReset').textContent='한 번 더 누르면 모두 지워져요';setTimeout(()=>{$('bReset').textContent='모두 지우고 새로 시작';},3000);return;}
- const meta={...S.meta};S={meta,items:[],nextId:1,last:'',draft:null,video:hasVideo()?S.video:null,autoPlay:S.autoPlay};F={kind:null,span:false,dir:'',editId:null};selId=null;fillForm({});$('mRound').value=S.meta.round=String((parseInt(meta.round,10)||1)+1);save();applyKind();renderList();$('bReset').textContent='모두 지우고 새로 시작';toast('새로 시작해요. 몇 번째 피드백을 확인해 주세요');};
+// Leaves nothing behind on this device: every saved note from this tool, the last video, the boxes.
+let wipeArm=0;
+function wipe(btn){if(Date.now()-wipeArm>3000){wipeArm=Date.now();const old=btn.textContent;btn.textContent='한 번 더 누르면 지워져요';setTimeout(()=>{btn.textContent=old;},3000);return;}
+ try{Object.keys(localStorage).filter(k=>k.startsWith('feedback-memo/')).forEach(k=>localStorage.removeItem(k));}catch{}
+ closeVideo();S={meta:{project:'',round:'',from:''},items:[],nextId:1,last:'',draft:null,video:null,autoPlay:true};F={kind:null,span:false,dir:'',editId:null};selId=null;fillForm({});
+ for(const id of ['mProject','mRound','mFrom','ytUrl'])$(id).value='';$('dropHint').innerHTML=$('dropHint').dataset.orig;$('sentBar').hidden=true;document.body.classList.remove('sentOn');
+ applyKind();renderList();renderClock();toast('이 기기에서 지웠어요');}
+$('bWipe').onclick=e=>wipe(e.target);$('bWipe2').onclick=e=>wipe(e.target);
 addEventListener('resize',renderTL);
 
 /* ---------- start ---------- */
 load();
 if(!storeOk)$('storeWarn').hidden=false;
 $('mProject').value=S.meta.project||'';$('mRound').value=S.meta.round||'';$('mFrom').value=S.meta.from||'';
+$('dropHint').dataset.orig=$('dropHint').innerHTML;
 // The video itself can't be kept between visits; say which one was open so it's easy to pick again.
 if(location.protocol==='file:')$('ytHint').textContent='유튜브 링크는 이 도구를 웹 주소(링크)로 열었을 때 쓸 수 있어요.';
 // Values in the link (?project=…&round=…) only fill empty boxes; what the writer typed wins.
